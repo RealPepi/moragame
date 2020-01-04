@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Demo_game</title>
+	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/5.7.1/firebase.js"></script>
+
+	<script type="text/javascript" src="main.js"></script>
+	
+    <link rel=stylesheet type="text/css" href="main.css">
+
+</head>
+<style>
+	body{
+		margin: 0;
+		padding: 0;
+		width: 100vw;
+		height: 100vh;
+		text-align: center;
+		overflow: hidden !important;
+	}
+</style>
+<body>
+
+	<div id="contain">
+		<img src="img/background_.png" alt="">
+		<div id="login_button_box"><span id="login_button"><img src="img/google.png" alt=""></span></div>
+		<span ></span>
+		<span id="SignOut"><img src="img/back.png" alt=""></span><br><br>  
+    	<!-- <button id="getUID">取得UID</button><br><br>  -->
+		<div id="top_contain">
+			<div id="enemy">
+				<img id="enemy_img" src="img/sliming.gif" alt="">
+			</div>
+			<div id="enemy_hand">
+				<img id="enemy_hand_img" src="img/question.png" alt="">
+			</div>
+			<div id="enemy_health">
+				<span class="enemy_heart"><span class="heart_img">
+					<img src="img/heart.gif" alt="">
+				</span></span>
+				<span class="enemy_heart"><span class="heart_img">
+					<img src="img/heart.gif" alt="">
+				</span></span>
+				<span class="enemy_heart"><span class="heart_img">
+					<img src="img/heart.gif" alt="">
+				</span></span>
+				<span class="enemy_heart"><span class="heart_img">
+					<img src="img/heart.gif" alt="">
+				</span></span>
+				<span class="enemy_heart"><span class="heart_img">
+					<img src="img/heart.gif" alt="">
+				</span></span>
+			</div>
+		</div>
+		<div id="bottom_contain">
+			<div id="your_character">
+				<img id="your_character_img" src="img/gobo.gif" alt="">
+			</div>
+			<div id="control_box">
+				<div class="hand" id="paper" onclick="mora(0)" onmouseover="mouse_over_mora(0)"
+				onmouseout="mouse_out_mora(0)">
+					<img class="mora_img" src="img/paper.png" alt=""></div>
+				<div class="hand" id="rock" onclick="mora(1)" onmouseover="mouse_over_mora(1)"
+				onmouseout="mouse_out_mora(1)">
+					<img class="mora_img" src="img/rock.png" alt=""></div>
+				<div class="hand" id="scissors" onclick="mora(2)" onmouseover="mouse_over_mora(2)"
+				onmouseout="mouse_out_mora(2)">
+					<img class="mora_img" src="img/scissors.png" alt=""></div>
+			</div>
+			<div id="hide_control_box">
+				<div class="hide_hand"><img class="result_img" src="" alt=""></div>
+				<div class="hide_hand"><img class="result_img" src="" alt=""></div>
+				<div class="hide_hand"><img class="result_img" src="" alt=""></div>
+			</div>
+			<div id="your_character_health">
+				<span class="heart"><span class="heart_img">
+					<img src="img/heart.gif" alt="">
+				</span></span>
+				<span class="heart"><span class="heart_img">
+					<img src="img/heart.gif" alt="">
+				</span></span>
+				<span class="heart"><span class="heart_img">
+					<img src="img/heart.gif" alt="">
+				</span></span>
+			</div>
+		</div>
+	</div>
+	<div id="info_box" onclick="reset_my_mora()">
+		<img src="img/info_box.png" alt="">
+		<h1 id="info_p"></h1>
+		<br><br>
+		<!-- <p>點擊方塊關閉</p> -->
+	</div>
+	<div id="game_over_box" onclick="get_score_board()">
+		<img id="game_over_img" src="img/win_background.png" alt="">
+	</div>
+	<div id="score_board">
+		<h1 style="color: #DDDDDD;">Score Board</h1><br><br><br><br>
+		<div id="world_board"></div>
+		<!-- <div id="local_board"></div> -->
+	</div>
+</body>
+<script>
+	var enemy_health = 5;
+	var your_character_health = 3;
+	var enemy_mora = [0,1,2];
+	var mora_count = 0;
+	var win_count = 0;
+	var game_over = false;
+	var timeoutID;
+	var time_start = 0;
+	var time_over = 0;
+
+	var myDate = new Date();
+
+	function game_start(){
+		// time_start = myDate.toLocaleTimeString(); ; 
+		// console.log("time1"+time_start);
+		enemy_health = 5;
+		your_character_health = 3;
+		enemy_mora = [0,1,2];
+		mora_count = 0;
+		win_count = 0;
+		game_over = false;
+		enemy_mora_sort();
+		document.getElementById("top_contain").style.top="0%";
+		document.getElementById("bottom_contain").style.top="50%";
+		document.getElementById("login_button_box").style.top="-100%";
+	}
+
+	function mora(your_mora){
+		// Math.floor(Math.random()*3); 
+		clearTimeout(timeoutID);
+		display_enemy_mora(enemy_mora[mora_count%3]);
+		var x = enemy_mora[mora_count%3]-your_mora;
+		if (mora_count==0) {
+			time_start = new Date().getTime();
+		}
+		if(x == -1 || x == 2){
+			// console.log("lose");
+			// document.getElementsByClassName("hide_hand")[your_mora].style.backgroundColor = "#AAAAAA";
+			document.getElementsByClassName("result_img")[your_mora].src="img/lose.png";
+		}
+		else if(x == 0){
+			// console.log("draw");
+			win_count += 1;
+			// document.getElementsByClassName("hide_hand")[your_mora].style.backgroundColor = "#CCEEFF";
+			document.getElementsByClassName("result_img")[your_mora].src="img/draw.png";
+		}
+		else{
+			// console.log("win");
+			win_count += 2;
+			// document.getElementsByClassName("hide_hand")[your_mora].style.backgroundColor = "#FFEE99";
+			document.getElementsByClassName("result_img")[your_mora].src="img/win.png";
+		}
+		document.getElementsByClassName("hide_hand")[your_mora].style.marginBottom = "91vh";
+		// alert(enemy_mora[mora_count%3]+""+your_mora);
+		mora_count++;
+		if( mora_count%3 == 0){
+			// get_result(win_count);
+			var timeout = window.setTimeout(get_result(win_count), 1000);
+			win_count = 0;
+			// reset_my_mora();
+		}
+	}
+	// var ppp = "img/paper.png";
+	// window.onload=function(){
+		function display_enemy_mora(mora){
+			switch(mora){
+				case 0:
+					// document.getElementById("enemy_hand").innerHTML = "布";
+					document.getElementById("enemy_hand_img").src="img/paper.png";
+					break;
+				case 1:
+					// document.getElementById("enemy_hand").innerHTML = "石頭";
+					document.getElementById("enemy_hand_img").src="img/rock.png";
+					break;
+				case 2:
+					// document.getElementById("enemy_hand").innerHTML = "剪刀";
+					document.getElementById("enemy_hand_img").src="img/scissors.png";
+					break;
+			}
+			timeoutID = window.setTimeout(( () => 
+				document.getElementById("enemy_hand_img").src="img/question.png" 
+				), 1000);
+		}
+	// }
+	function info_box(info){
+		document.getElementById("info_box").style.top="30vh";
+		document.getElementById("info_p").innerHTML = info;
+	}
+
+	function get_result(result){
+		
+		if(result>=4){
+			document.getElementById("info_p").innerHTML = "you win this round!!";
+			document.getElementById("enemy_img").src="img/sliming_hurt.gif"
+			enemy_health--;
+			document.getElementsByClassName("enemy_heart")[enemy_health].innerHTML="";
+			enemy_mora_sort();
+		}
+		else if(result==3){
+			document.getElementById("info_p").innerHTML = "this round got draw";
+		}
+		else{
+			document.getElementById("info_p").innerHTML = "you lose this round...";
+			document.getElementById("your_character_img").src="img/gobo_hurt.gif" 
+			your_character_health--;
+			document.getElementsByClassName("heart")[your_character_health].innerHTML="";
+		}
+		check_win();
+		var	timeout = window.setTimeout(function(){
+			document.getElementById("your_character_img").src="img/gobo.gif"; 
+			document.getElementById("enemy_img").src="img/sliming.gif";
+		}, 1000);
+		document.getElementById("info_box").style.top="30vh";
+	}
+
+	function check_win(){
+		if (enemy_health==0) {
+			// document.getElementById("info_p").innerHTML = "you win this game!!!!!";
+			// document.getElementById("game_over_box").style.right="0";
+			// alert("you win this game!!");
+			// game_over = true;
+			// time_over = myDate.toLocaleTimeString();
+			// console.log("time1"+time_over);
+			// console.log(time_over-time_start);
+			game_is_over(1);
+		}
+		if(your_character_health==0){
+			// document.getElementById("info_p").innerHTML = "you lose this game!!!!!";
+			// document.getElementById("game_over_box").style.right="0";
+			// document.getElementById("game_over_img").src="img/lose_background.png";
+			// alert("you lose this game!!");
+			// game_over = true;
+			game_is_over(0);
+		}
+	}
+
+	var db = firebase.database();
+	function game_is_over(is_win){
+		time_over = new Date().getTime();
+		console.log((time_over-time_start)/1000);
+		if (is_win) {
+			document.getElementById("info_p").innerHTML = "you win this game!!!!!";
+			document.getElementById("game_over_img").src="img/win_background.png";
+
+			var x = your_character_health-enemy_health;
+			var y = (time_over-time_start)/1000;
+			db.ref('/users/' + userLogin['email'].replace("@gmail.com", "_san")).set({
+				use_character: "gobo",
+				enemy: "sliming",
+			    result: "win",
+			    point: x,
+			    pass_time: y
+			})
+			.then(function () {info_box("資料已儲存至伺服器!!");})
+			.catch(function () {alert("伺服器發生錯誤，請稍後再試");});
+		}
+		else{
+			document.getElementById("info_p").innerHTML = "you lose this game!!!!!";
+			document.getElementById("game_over_img").src="img/lose_background.png";
+		}
+		document.getElementById("game_over_box").style.right="0";
+
+		game_over = true;
+		document.getElementById("top_contain").style.top="-50%";
+		document.getElementById("bottom_contain").style.top="100%";
+		document.getElementById("login_button_box").style.top="-100%";
+
+		// console.log(your_character_health-enemy_health);
+	}
+
+	// 點擊info_box
+	function reset_my_mora(){
+		if (!game_over) {
+			for (var i = 2; i >= 0; i--) {
+				document.getElementsByClassName("hide_hand")[i].style.marginBottom = "0vh";
+				// document.getElementsByClassName("hide_hand")[i].style.backgroundColor = "#ddd";
+			}
+		}else{
+			show_score_board();
+		}	
+		document.getElementById("info_box").style.top="-100vh";
+	}
+
+	function enemy_mora_sort(){
+		enemy_mora.sort(function() {
+		    return (0.5-Math.random());
+		});
+		// console.log(enemy_mora);
+	}
+
+	function mouse_over_mora(mora){
+		if (mora==0) {
+			document.getElementsByClassName("mora_img")[mora].src="img/paper_s.png";
+		}
+		else if(mora==1){
+			document.getElementsByClassName("mora_img")[mora].src="img/rock_s.png";
+		}
+		else{
+			document.getElementsByClassName("mora_img")[mora].src="img/scissors_s.png";
+		}
+		
+	}
+	function mouse_out_mora(mora){
+		if (mora==0) {
+			document.getElementsByClassName("mora_img")[mora].src="img/paper.png";
+		}
+		else if(mora==1){
+			document.getElementsByClassName("mora_img")[mora].src="img/rock.png";
+		}
+		else{
+			document.getElementsByClassName("mora_img")[mora].src="img/scissors.png";
+		}
+	}
+
+	function get_score_board(){
+		document.getElementById("game_over_box").style.right="-100vw";
+	}
+	function show_score_board(){
+		db.ref('/users/' ).once('value', function (snapshot) {
+			document.getElementById("score_board").style.top="0";
+			var data = snapshot.val();
+		    // console.log(data);
+		    var key = Object.keys(data);
+		    // console.log(data[key[0]]);
+		    for (var i = key.length - 1; i >= 0; i--) {
+		    	// console.log(data[key[i]]);
+		    	var createDiv=document.createElement("span"); 
+		    	createDiv.className="player_on_score";
+		    	createDiv.innerHTML="player:"+key[i]+"/left_heart:"+data[key[i]]["point"]+"/pass_time:"+data[key[i]]["pass_time"]+"<br>";
+		    	document.getElementById("world_board").appendChild(createDiv);
+		    }
+		});
+	}
+
+
+
+</script>
+</html>
